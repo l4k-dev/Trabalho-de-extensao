@@ -19,6 +19,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/produtos/{produto}', [ProdutoController::class, 'destroy'])->name('produtos.destroy');
     Route::patch('/produtos/{produto}/vender', [ProdutoController::class, 'vender'])->name('produtos.vender');
 
+    Route::get('/relatorio', [ProdutoController::class, 'relatorio'])->name('relatorio.index');
+    Route::get('/relatorio-vendas', function () {
+        $vendas = \App\Models\Venda::with('produto')->latest()->get();
+        return view('relatorios.vendas', compact('vendas'));
+    })->name('vendas.relatorio');
     // Gestão de Operadores (Cadastro Administrativo)
     Route::get('/usuarios/novo', [RegisteredUserController::class, 'create'])->name('usuarios.create');
     Route::post('/usuarios/novo', [RegisteredUserController::class, 'store'])->name('usuarios.store');

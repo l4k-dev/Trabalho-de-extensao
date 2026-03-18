@@ -1,1 +1,1 @@
-<img src="{{ asset('img/caxa.png') }}" {{ $attributes->merge(['class' => '']) }} alt="Logo Espetinho Caxibrema">
+<img src="{{ asset('img/caxa.png') }} " style="width: 100px; height: auto;" {{ $attributes->merge(['class' => '']) }} alt="Logo Espetinho Caxibrema">
