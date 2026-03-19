@@ -1,7 +1,7 @@
-# 🍢 Sistema de Gestão - Espetinho Caxibrema
+# 🍢 Sistema de Gestão - Espetinho 
 > **Projeto de Extensão Universitária** focado na digitalização de microempreendedores locais.
 
-Este sistema foi desenvolvido para automatizar o controle de estoque, faturamento e gestão de vendas do **Espetinho Caxibrema** (Danilo Carneiro Borges), substituindo registros manuais por uma plataforma web moderna e segura.
+Este sistema foi desenvolvido para automatizar o controle de estoque, faturamento e gestão de vendas do **Espetinho**, substituindo registros manuais por uma plataforma web moderna e segura.
 
 ---
 
