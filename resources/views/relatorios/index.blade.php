@@ -1,9 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Relatório de Gestão - Caxibrema') }}
-        </h2>
-    </x-slot>
+    
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -43,6 +39,10 @@
                     </tbody>
                 </table>
             </div>
+            <div class="mt-6 px-4">
+                {{ $produtos->links() }}
+            </div>
         </div>
+
     </div>
 </x-app-layout>

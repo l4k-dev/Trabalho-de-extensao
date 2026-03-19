@@ -15,7 +15,7 @@ class ProdutoController extends Controller
     public function index()
     {
         // Ordenamos por nome para facilitar a localização visual
-        $produtos = \App\Models\Produto::orderBy('nome', 'asc')->paginate(3);
+        $produtos = \App\Models\Produto::orderBy('nome', 'asc')->paginate(10);
         return view('dashboard', compact('produtos'));
     }
 
@@ -75,21 +75,36 @@ class ProdutoController extends Controller
         return back()->with('success', 'Venda de ' . $produto->nome . ' (R$ ' . number_format($produto->preco, 2, ',', '.') . ') realizada!');
     }
 
-    /**
-     * Relatório de Estoque e Valor Patrimonial
-     */
     public function relatorio()
     {
-        $produtos = Produto::all();
+        // 1. Calculamos os totais PRIMEIRO sobre todos os registros (antes de paginar)
+        $query = Produto::query();
 
-        // Soma o total de unidades físicas
-        $estoqueTotal = $produtos->sum('quantidade_estoque');
+        $estoqueTotal = $query->sum('quantidade_estoque');
 
-        // Calcula o valor total potencial (dinheiro "parado" em espetinhos)
-        $valorEmEstoque = $produtos->sum(function ($p) {
+        // Para o valor total, usamos uma query bruta ou somamos antes de paginar
+        $valorEmEstoque = $query->get()->sum(function ($p) {
             return $p->quantidade_estoque * $p->preco;
         });
 
+        // 2. Agora aplicamos a paginação de 10 para a lista da tabela
+        $produtos = Produto::orderBy('nome', 'asc')->paginate(10);
+
         return view('relatorios.index', compact('estoqueTotal', 'valorEmEstoque', 'produtos'));
+    }
+    /**
+     * Função exclusiva para processar e enviar os dados de vendas para a View
+     */
+    public function relatorioVendas()
+    {
+        // 1. Puxa as vendas do banco (Histórico)
+        $vendas = \App\Models\Venda::with('produto')->latest()->paginate(10);
+
+        // 2. Calcula os totais que a sua View está pedindo (IMPORTANTE)
+        $faturamentoTotal = \App\Models\Venda::sum('valor_total');
+        $totalEspetinhos = \App\Models\Venda::sum('quantidade');
+
+        // 3. Manda para a view. Se você não colocar 'faturamentoTotal' aqui, dá o erro que você viu!
+        return view('relatorios.vendas', compact('vendas', 'faturamentoTotal', 'totalEspetinhos'));
     }
 }
