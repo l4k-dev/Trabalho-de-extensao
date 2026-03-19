@@ -32,4 +32,4 @@ Se desejar rodar o projeto localmente:
 
 1. Clone o repositório:
 ```bash
-git clone [https://github.com/SEU_USUARIO/NOME_DO_REPO.git](https://github.com/SEU_USUARIO/NOME_DO_REPO.git)
+git clone [https://github.com/l4k-dev/Trabalho-de-extensao.git](https://github.com/l4k-dev/Trabalho-de-extensao.git)
