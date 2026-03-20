@@ -97,14 +97,49 @@ class ProdutoController extends Controller
      */
     public function relatorioVendas()
     {
-        // 1. Puxa as vendas do banco (Histórico)
+        // 1. Puxa as vendas normais (o que você já tem)
         $vendas = \App\Models\Venda::with('produto')->latest()->paginate(10);
 
-        // 2. Calcula os totais que a sua View está pedindo (IMPORTANTE)
+        // 2. Calcula os totais dos cards (o que você já tem)
         $faturamentoTotal = \App\Models\Venda::sum('valor_total');
         $totalEspetinhos = \App\Models\Venda::sum('quantidade');
 
-        // 3. Manda para a view. Se você não colocar 'faturamentoTotal' aqui, dá o erro que você viu!
-        return view('relatorios.vendas', compact('vendas', 'faturamentoTotal', 'totalEspetinhos'));
+        // 3. NOVO: Lógica da Curva ABC (Ranking de Faturamento)
+        // Agrupa por produto, soma o valor e ordena do maior para o menor
+        $topProdutos = \App\Models\Venda::select(
+            'produto_id',
+            \DB::raw('SUM(valor_total) as faturamento_por_produto'),
+            \DB::raw('SUM(quantidade) as qtd_vendida')
+        )
+            ->with('produto')
+            ->groupBy('produto_id')
+            ->orderBy('faturamento_por_produto', 'desc')
+            ->take(10) // Pega só o Top 10
+            ->get();
+        // Conta quantas vendas foram feitas no total
+        $numeroVendas = \App\Models\Venda::count();
+
+        // Calcula o Ticket Médio (Evita divisão por zero)
+        $ticketMedio = $numeroVendas > 0 ? ($faturamentoTotal / $numeroVendas) : 0;
+
+        // Agrupamento por Hora: Conta quantas vendas ocorreram em cada hora do dia
+        $vendasPorHora = \App\Models\Venda::select(
+            \DB::raw('HOUR(created_at) as hora'),
+            \DB::raw('count(*) as total_pedidos')
+        )
+            ->groupBy('hora')
+            ->orderBy('hora', 'asc')
+            ->get();
+
+        // Prepara os dados para o gráfico (Garante que horas vazias apareçam se necessário, 
+        // mas aqui pegaremos apenas onde houve venda)
+        return view('relatorios.vendas', compact(
+            'vendas',
+            'faturamentoTotal',
+            'totalEspetinhos',
+            'topProdutos',
+            'ticketMedio',
+            'vendasPorHora' // Adicione aqui
+        ));
     }
 }

@@ -95,40 +95,79 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-50">
+                        <tbody>
                             @foreach($produtos as $produto)
-                            <tr class="hover:bg-blue-50/20 transition-colors group italic">
-                                <td class="px-8 py-6">
-                                    <span class="font-black text-gray-800 uppercase tracking-tighter">{{ $produto->nome }}</span>
-                                </td>
-                                <td class="px-8 py-6 text-center">
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black {{ $produto->quantidade_estoque < 5 ? 'bg-rose-100 text-rose-600 animate-pulse' : 'bg-gray-100 text-gray-500' }}">
-                                        {{ $produto->quantidade_estoque }} UN
-                                    </span>
-                                </td>
-                                <td class="px-8 py-6 text-center font-mono font-bold text-gray-500 text-sm">
-                                    R$ {{ number_format($produto->preco, 2, ',', '.') }}
-                                </td>
-                                <td class="px-8 py-6">
-                                    <div class="flex justify-end items-center gap-3">
-                                        <form action="{{ route('produtos.vender', $produto) }}" method="POST">
-                                            @csrf @method('PATCH')
-                                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-black px-4 py-2 rounded-xl text-[10px] uppercase transition active:scale-90">
-                                                Vender 🛒
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('produtos.destroy', $produto) }}" method="POST" onsubmit="return confirm('Remover item?')">
-                                            @csrf
-                                            @method('DELETE') <button type="submit" class="p-2.5 rounded-xl transition-colors hover:bg-red-50 group">
-                                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" />
+                            @php
+                            $estoque = $produto->quantidade_estoque;
+                            $isEsgotado = $estoque <= 0;
+                                $isBaixo=$estoque < 5 && !$isEsgotado;
+
+                                // Definição de Cores e Ícones
+                                $statusConfig=match(true) {
+                                $isEsgotado=> ['color' => 'text-red-600 bg-red-50', 'label' => 'Esgotado', 'icon' => '🚫'],
+                                $isBaixo => ['color' => 'text-amber-600 bg-amber-50', 'label' => 'Repor', 'icon' => '⚠️'],
+                                default => ['color' => 'text-emerald-600 bg-emerald-50', 'label' => 'Ok', 'icon' => '✅'],
+                                };
+                                @endphp
+
+                                <tr class="group hover:bg-gray-50/80 transition-all border-b border-gray-100 last:border-0">
+                                    {{-- Coluna Produto --}}
+                                    <td class="px-6 py-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="hidden sm:flex w-10 h-10 bg-gray-100 rounded-full items-center justify-center text-lg group-hover:bg-blue-100 transition-colors">
+                                                🍢
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="font-bold text-gray-900 uppercase tracking-tight italic">{{ $produto->nome }}</span>
+                                                <span class="text-[10px] text-gray-400 font-medium">CÓD: #{{ sprintf('%04d', $produto->id) }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    {{-- Coluna Estoque --}}
+                                    <td class="px-6 py-5 text-center">
+                                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg border border-transparent {{ $statusConfig['color'] }}">
+                                            <span class="text-[11px] font-black">{{ $estoque }} UN</span>
+                                            <span class="text-[10px] opacity-70 uppercase font-bold tracking-tighter">{{ $statusConfig['label'] }}</span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Coluna Preço --}}
+                                    <td class="px-6 py-5 text-center font-mono font-bold text-gray-600">
+                                        <span class="text-xs text-gray-400 mr-0.5">R$ </span>{{ number_format($produto->preco, 2, ',', '.') }}
+                                    </td>
+
+                                    {{-- Coluna Ações --}}
+                                    <td class="px-6 py-5">
+                                        <div class="flex justify-end items-center gap-2">
+                                            {{-- Vender --}}
+                                            <form action="{{ route('produtos.vender', $produto) }}" method="POST">
+                                                @csrf @method('PATCH')
+                                                <button
+                                                    {{ $isEsgotado ? 'disabled' : '' }}
+                                                    class="flex items-center gap-2 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all {{ $isEsgotado ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-100 active:scale-95' }}">
+                                                    <span>Vender</span>
+                                                    <span class="hidden sm:inline">🛒</span>
+                                                </button>
+                                            </form>
+
+                                            {{-- Deletar --}}
+                                            <form action="{{ route('produtos.destroy', $produto) }}" method="POST" onsubmit="return confirm('Excluir {{ $produto->nome }}?')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="p-2 hover:bg-red-50 rounded-lg transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="#ef4444" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
                         </tbody>
                     </table>
                 </div>
